@@ -148,6 +148,26 @@ function paragraphWithIndent(indentAttributes) {
     return new XmlElement("w:p", {}, [propertiesXml]);
 }
 
+test("paragraph spacing", {
+    "paragraph has line spacing read from paragraph properties if present": function() {
+        var paragraphXml = paragraphWithSpacing({"w:lineRule": "auto", "w:line": "480", "w:before": "0", "w:after": "225"});
+        var paragraph = readXmlElementValue(paragraphXml, {styles: new Styles({}, {})});
+        assert.deepEqual(paragraph.spacing, {lineRule: "auto", line: "480", before: "0", after: "225"});
+    },
+    "when spacing attributes aren't set then spacings are null": function() {
+        var paragraphXml = paragraphWithSpacing({});
+        var paragraph = readXmlElementValue(paragraphXml);
+        assert.deepEqual(paragraph.spacing, {lineRule: null, line: null, before: null, after: null});
+
+    }
+});
+
+function paragraphWithSpacing(spacingAttributes) {
+    var spacingXml = new XmlElement("w:spacing", spacingAttributes, []);
+    var propertiesXml = new XmlElement("w:pPr", {}, [spacingXml]);
+    return new XmlElement("w:p", {}, [propertiesXml]);
+}
+
 test("paragraph has numbering properties from paragraph properties if present", function() {
     var numberingPropertiesXml = new XmlElement("w:numPr", {}, [
         new XmlElement("w:ilvl", {"w:val": "1"}),

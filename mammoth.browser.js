@@ -599,6 +599,7 @@ function Document(children, options) {
 function Paragraph(children, properties) {
     properties = properties || {};
     var indent = properties.indent || {};
+    var spacing = properties.spacing || {};
     return {
         type: types.paragraph,
         children: children,
@@ -611,6 +612,12 @@ function Paragraph(children, properties) {
             end: indent.end || null,
             firstLine: indent.firstLine || null,
             hanging: indent.hanging || null
+        },
+        spacing: {
+            lineRule: spacing.lineRule || null,
+            line: spacing.line || null,
+            before: spacing.before || null,
+            after: spacing.after || null
         }
     };
 }
@@ -836,7 +843,7 @@ function BodyReader(options) {
         }
         return emptyResult();
     }
-    
+
     function readParagraphIndent(element) {
         return {
             start: element.attributes["w:start"] || element.attributes["w:left"],
@@ -845,7 +852,16 @@ function BodyReader(options) {
             hanging: element.attributes["w:hanging"]
         };
     }
-    
+
+    function readParagraphSpacing(element) {
+        return {
+            lineRule: element.attributes["w:lineRule"],
+            line: element.attributes["w:line"],
+            before: element.attributes["w:before"],
+            after: element.attributes["w:after"]
+        };
+    }
+
     function readRunProperties(element) {
         return readRunStyle(element).map(function(style) {
             return {
@@ -862,7 +878,7 @@ function BodyReader(options) {
             };
         });
     }
-    
+
     function readBooleanElement(element) {
         if (element) {
             var value = element.attributes["w:val"];
@@ -871,19 +887,19 @@ function BodyReader(options) {
             return false;
         }
     }
-    
+
     function readParagraphStyle(element) {
         return readStyle(element, "w:pStyle", "Paragraph", styles.findParagraphStyleById);
     }
-    
+
     function readRunStyle(element) {
         return readStyle(element, "w:rStyle", "Run", styles.findCharacterStyleById);
     }
-    
+
     function readTableStyle(element) {
         return readStyle(element, "w:tblStyle", "Table", styles.findTableStyleById);
     }
-    
+
     function readStyle(element, styleTagName, styleType, findStyleById) {
         var messages = [];
         var styleElement = element.first(styleTagName);
@@ -902,9 +918,9 @@ function BodyReader(options) {
         }
         return elementResultWithMessages({styleId: styleId, name: name}, messages);
     }
-    
+
     var unknownComplexField = {type: "unknown"};
-    
+
     function readFldChar(element) {
         var type = element.attributes["w:fldCharType"];
         if (type === "begin") {
@@ -920,7 +936,7 @@ function BodyReader(options) {
         }
         return emptyResult();
     }
-    
+
     function currentHyperlinkHref() {
         var topHyperlink = _.last(complexFieldStack.filter(function(complexField) {
             return complexField.type === "hyperlink";
@@ -936,12 +952,12 @@ function BodyReader(options) {
             return null;
         }
     }
-    
+
     function readInstrText(element) {
         currentInstrText.push(element.text());
         return emptyResult();
     }
-    
+
     function noteReferenceReader(noteType) {
         return function(element) {
             var noteId = element.attributes["w:id"];
@@ -951,17 +967,17 @@ function BodyReader(options) {
             }));
         };
     }
-    
+
     function readCommentReference(element) {
         return elementResult(documents.commentReference({
             commentId: element.attributes["w:id"]
         }));
     }
-    
+
     function readChildElements(element) {
         return readXmlElements(element.children);
     }
-    
+
     var xmlElementReaders = {
         "w:p": function(element) {
             return readXmlElements(element.children)
@@ -982,7 +998,8 @@ function BodyReader(options) {
                     styleName: style.name,
                     alignment: element.firstOrEmpty("w:jc").attributes["w:val"],
                     numbering: readNumberingProperties(element.firstOrEmpty("w:numPr"), numbering),
-                    indent: readParagraphIndent(element.firstOrEmpty("w:ind"))
+                    indent: readParagraphIndent(element.firstOrEmpty("w:ind")),
+                    spacing: readParagraphSpacing(element.firstOrEmpty("w:spacing"))
                 };
             });
         },
@@ -1018,13 +1035,13 @@ function BodyReader(options) {
             return readXmlElements(element.children).map(function(children) {
                 function create(options) {
                     var targetFrame = element.attributes["w:tgtFrame"] || null;
-                    
+
                     return new documents.Hyperlink(
                         children,
                         _.extend({targetFrame: targetFrame}, options)
                     );
                 }
-                
+
                 if (relationshipId) {
                     var href = relationships.findTargetByRelationshipId(relationshipId);
                     if (anchor) {
@@ -1064,11 +1081,11 @@ function BodyReader(options) {
                 return elementResult(new documents.BookmarkStart({name: name}));
             }
         },
-        
+
         "mc:AlternateContent": function(element) {
             return readChildElements(element.first("mc:Fallback"));
         },
-        
+
         "w:sdt": function(element) {
             return readXmlElements(element.firstOrEmpty("w:sdtContent").children);
         },
@@ -1090,13 +1107,13 @@ function BodyReader(options) {
         "v:group": readChildElements,
         "v:rect": readChildElements
     };
-    
+
     return {
         readXmlElement: readXmlElement,
         readXmlElements: readXmlElements
     };
 
-    
+
     function readTable(element) {
         var propertiesResult = readTableProperties(element.firstOrEmpty("w:tblPr"));
         return readXmlElements(element.children)
@@ -1107,7 +1124,7 @@ function BodyReader(options) {
                 });
             });
     }
-    
+
     function readTableProperties(element) {
         return readTableStyle(element).map(function(style) {
             return {
@@ -1116,7 +1133,7 @@ function BodyReader(options) {
             };
         });
     }
-    
+
     function readTableRow(element) {
         var properties = element.firstOrEmpty("w:trPr");
         var isHeader = !!properties.first("w:tblHeader");
@@ -1124,20 +1141,20 @@ function BodyReader(options) {
             return documents.TableRow(children, {isHeader: isHeader});
         });
     }
-    
+
     function readTableCell(element) {
         return readXmlElements(element.children).map(function(children) {
             var properties = element.firstOrEmpty("w:tcPr");
-            
+
             var gridSpan = properties.firstOrEmpty("w:gridSpan").attributes["w:val"];
             var colSpan = gridSpan ? parseInt(gridSpan, 10) : 1;
-            
+
             var cell = documents.TableCell(children, {colSpan: colSpan});
             cell._vMerge = readVMerge(properties);
             return cell;
         });
     }
-    
+
     function readVMerge(properties) {
         var element = properties.first("w:vMerge");
         if (element) {
@@ -1147,7 +1164,7 @@ function BodyReader(options) {
             return null;
         }
     }
-    
+
     function calculateRowSpans(rows) {
         var unexpectedNonRows = _.any(rows, function(row) {
             return row.type !== documents.types.tableRow;
@@ -1167,9 +1184,9 @@ function BodyReader(options) {
                 "unexpected non-cell element in table row, cell merging may be incorrect"
             )]);
         }
-        
+
         var columns = {};
-        
+
         rows.forEach(function(row) {
             var cellIndex = 0;
             row.children.forEach(function(cell) {
@@ -1182,7 +1199,7 @@ function BodyReader(options) {
                 cellIndex += cell.colSpan;
             });
         });
-        
+
         rows.forEach(function(row) {
             row.children = row.children.filter(function(cell) {
                 return !cell._vMerge;
@@ -1191,7 +1208,7 @@ function BodyReader(options) {
                 delete cell._vMerge;
             });
         });
-        
+
         return elementResult(rows);
     }
 
@@ -1202,20 +1219,20 @@ function BodyReader(options) {
             .getElementsByTagName("pic:pic")
             .getElementsByTagName("pic:blipFill")
             .getElementsByTagName("a:blip");
-        
+
         return combineResults(blips.map(readBlip.bind(null, element)));
     }
-    
+
     function readBlip(element, blip) {
         var properties = element.first("wp:docPr").attributes;
         var altText = isBlank(properties.descr) ? properties.title : properties.descr;
         return readImage(findBlipImageFile(blip), altText);
     }
-    
+
     function isBlank(value) {
         return value == null || /^\s*$/.test(value);
     }
-    
+
     function findBlipImageFile(blip) {
         var embedRelationshipId = blip.attributes["r:embed"];
         var linkRelationshipId = blip.attributes["r:link"];
@@ -1229,10 +1246,10 @@ function BodyReader(options) {
             };
         }
     }
-    
+
     function readImageData(element) {
         var relationshipId = element.attributes['r:id'];
-        
+
         if (relationshipId) {
             return readImage(
                 findEmbeddedImageFile(relationshipId),
@@ -1241,7 +1258,7 @@ function BodyReader(options) {
             return emptyResultWithMessages([warning("A v:imagedata element without a relationship ID was ignored")]);
         }
     }
-    
+
     function findEmbeddedImageFile(relationshipId) {
         var path = uris.uriToZipEntryName("word", relationships.findTargetByRelationshipId(relationshipId));
         return {
@@ -1249,10 +1266,10 @@ function BodyReader(options) {
             read: docxFile.read.bind(docxFile, path)
         };
     }
-    
+
     function readImage(imageFile, altText) {
         var contentType = contentTypes.findContentType(imageFile.path);
-        
+
         var image = documents.Image({
             readImage: imageFile.read,
             altText: altText,
@@ -1262,7 +1279,7 @@ function BodyReader(options) {
             [] : warning("Image of type " + contentType + " is unlikely to display in web browsers");
         return elementResultWithMessages(image, warnings);
     }
-    
+
     function undefinedStyleWarning(type, styleId) {
         return warning(
             type + " style with ID " + styleId + " was referenced but not defined in the document");
@@ -1279,7 +1296,7 @@ function readNumberingProperties(element, numbering) {
         return numbering.findLevel(numId, level);
     }
 }
-    
+
 var supportedImageTypes = {
     "image/png": true,
     "image/gif": true,
