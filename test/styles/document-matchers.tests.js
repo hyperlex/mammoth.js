@@ -69,3 +69,13 @@ test("startsWith matcher is case insensitive", function() {
     var matcher = documentMatchers.startsWith("Heading");
     assert.ok(matcher.operator(matcher.operand, "heaDING"));
 });
+
+test("contains matches strings including keyword", function() {
+    var matcher = documentMatchers.contains("Align");
+    assert.ok(matcher.operator(matcher.operand, "Spacing Align"));
+});
+
+test("contains matcher is case insensitive", function() {
+    var matcher = documentMatchers.contains("AlIgN");
+    assert.ok(matcher.operator(matcher.operand, "Spacing aLiGn"));
+});
