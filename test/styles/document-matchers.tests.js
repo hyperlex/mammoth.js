@@ -25,6 +25,13 @@ test("paragraph style name only matches paragraphs with that style name", functi
     assert.ok(!matcher.matches(paragraphWithStyle("Heading2", "Heading 2")));
 });
 
+test("paragraph alignment only matches paragraphs with that alignment", function() {
+    var matcher = documentMatchers.paragraph({alignment: documentMatchers.equalTo("center")});
+    assert.ok(!matcher.matches(new Paragraph()));
+    assert.ok(matcher.matches(paragraphWithAlignment('center')));
+    assert.ok(!matcher.matches(paragraphWithAlignment('both')));
+});
+
 test("ordered-list(index) matches an ordered list with specified level index", function() {
     var matcher = documentMatchers.paragraph({list: {isOrdered: true, levelIndex: 1}});
     assert.ok(!matcher.matches(new Paragraph()));
@@ -49,6 +56,9 @@ function paragraphWithStyle(styleId, styleName) {
     return new Paragraph([], {styleId: styleId, styleName: styleName});
 }
 
+function paragraphWithAlignment(alignment) {
+    return new Paragraph([], {alignment: alignment});
+}
 
 test("equalTo matcher is case insensitive", function() {
     var matcher = documentMatchers.equalTo("Heading 1");
