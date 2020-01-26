@@ -117,6 +117,12 @@ test("styleReader.readDocumentMatcher", {
         );
     },
 
+    "reads paragraph with alignment": function() {
+        assertDocumentMatcher(
+            "p[alignment='center']",
+            documentMatchers.paragraph({alignment: documentMatchers.equalTo("center")}));
+    },
+
     "reads p:ordered-list(1) as ordered list with index of 0": function() {
         assertDocumentMatcher(
             "p:ordered-list(1)",
