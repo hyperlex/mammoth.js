@@ -79,6 +79,40 @@ test('uses style mappings to pick HTML element for docx paragraph', function() {
     });
 });
 
+test('uses dynamic style mappings to pick HTML element for docx paragraph', function() {
+    var document = new documents.Document([
+        new documents.Paragraph([runOfText("Lorem ipsum.")], {
+            styleName: 'Normal',
+            alignment: "center",
+            spacing: {line: "480"}
+        }),
+        new documents.Paragraph([runOfText("Dolor amet.")], {
+            styleName: 'Normal',
+            alignment: "left"
+        })
+    ]);
+    var converter = new DocumentConverter({
+        styleMap: [
+            {
+                from: documentMatchers.paragraph(),
+                to: htmlPaths.topLevelElement('p', {}, function(element) {
+                    var classNames = [];
+                    if (element.alignment) {
+                        classNames.push('align-' + element.alignment);
+                    }
+                    if (element.spacing && element.spacing.line) {
+                        classNames.push('spacing-' + element.spacing.line);
+                    }
+                    return {class: classNames.join(' ')};
+                })
+            }
+        ]
+    });
+    return converter.convertToHtml(document).then(function(result) {
+        assert.equal(result.value, "<p class=\"align-center spacing-480\">Lorem ipsum.</p><p class=\"align-left\">Dolor amet.</p>");
+    });
+});
+
 test('mappings for style names are case insensitive', function() {
     var document = new documents.Document([
         paragraphOfText("Hello.", "Heading1", "heading 1")
