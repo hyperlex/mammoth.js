@@ -635,7 +635,9 @@ function Run(children, properties) {
         isStrikethrough: properties.isStrikethrough,
         isSmallCaps: properties.isSmallCaps,
         verticalAlignment: properties.verticalAlignment || verticalAlignment.baseline,
-        font: properties.font || null
+        font: properties.font || null,
+        color: properties.color || null,
+        highlight: properties.highlight || null
     };
 }
 
@@ -874,7 +876,9 @@ function BodyReader(options) {
                 isUnderline: readBooleanElement(element.first("w:u")),
                 isItalic: readBooleanElement(element.first("w:i")),
                 isStrikethrough: readBooleanElement(element.first("w:strike")),
-                isSmallCaps: readBooleanElement(element.first("w:smallCaps"))
+                isSmallCaps: readBooleanElement(element.first("w:smallCaps")),
+                color: element.firstOrEmpty("w:color").attributes["w:val"],
+                highlight: element.firstOrEmpty("w:highlight").attributes["w:val"]
             };
         });
     }
