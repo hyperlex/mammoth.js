@@ -585,6 +585,14 @@ test("run has font read from properties", function() {
     assert.deepEqual(run.font, "Arial");
 });
 
+test("run has color read from properties", function() {
+    var colorXml = new XmlElement("w:color", {"w:val": "FFFFFF"});
+    var runXml = runWithProperties([colorXml]);
+
+    var run = readXmlElementValue(runXml);
+    assert.deepEqual(run.color, "FFFFFF");
+});
+
 test("run properties not included as child of run", function() {
     var runStyleXml = new XmlElement("w:rStyle");
     var runPropertiesXml = new XmlElement("w:rPr", {}, [runStyleXml]);
