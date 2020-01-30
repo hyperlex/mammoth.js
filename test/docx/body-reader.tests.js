@@ -168,6 +168,37 @@ function paragraphWithSpacing(spacingAttributes) {
     return new XmlElement("w:p", {}, [propertiesXml]);
 }
 
+test("paragraph border", {
+    "paragraph has border read from paragraph properties if present": function() {
+        var borderStyle = "single";
+        var borderWidth = "2";
+        var borderOffset = "1";
+        var borderColor = "c0ffee";
+        var paragraphXml = new XmlElement("w:p", {}, [new XmlElement("w:pPr", {}, [(new XmlElement("w:pBdr", {}, [
+            borderChild("top", borderStyle, borderWidth, borderOffset, borderColor),
+            borderChild("right", borderStyle, borderWidth, borderOffset, borderColor),
+            borderChild("bottom", borderStyle, borderWidth, borderOffset, borderColor),
+            borderChild("left", borderStyle, borderWidth, borderOffset, borderColor)]))])]);
+        var paragraph = readXmlElementValue(paragraphXml, {styles: new Styles({}, {})});
+        assert.deepEqual(paragraph.border, {
+            top: {style: borderStyle, width: borderWidth, offset: borderOffset, color: borderColor},
+            right: {style: borderStyle, width: borderWidth, offset: borderOffset, color: borderColor},
+            bottom: {style: borderStyle, width: borderWidth, offset: borderOffset, color: borderColor},
+            left: {style: borderStyle, width: borderWidth, offset: borderOffset, color: borderColor}
+        });
+    },
+    "when border attributes aren't set then borders are null": function() {
+        var paragraphXml = new XmlElement("w:p", {}, []);
+        var paragraph = readXmlElementValue(paragraphXml, {styles: new Styles({}, {})});
+        assert.deepEqual(paragraph.border, {top: null, right: null, bottom: null, left: null});
+    }
+});
+
+function borderChild(place, style, width, offset, color) {
+    return new XmlElement("w:" + place, {"w:val": style, "w:sz": width, "w:space": offset, "w:color": color});
+}
+
+
 test("paragraph has numbering properties from paragraph properties if present", function() {
     var numberingPropertiesXml = new XmlElement("w:numPr", {}, [
         new XmlElement("w:ilvl", {"w:val": "1"}),
