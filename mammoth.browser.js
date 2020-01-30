@@ -600,6 +600,7 @@ function Paragraph(children, properties) {
     properties = properties || {};
     var indent = properties.indent || {};
     var spacing = properties.spacing || {};
+    var border = properties.border || {};
     return {
         type: types.paragraph,
         children: children,
@@ -618,6 +619,12 @@ function Paragraph(children, properties) {
             line: spacing.line || null,
             before: spacing.before || null,
             after: spacing.after || null
+        },
+        border: {
+            top: border.top || null,
+            left: border.left || null,
+            bottom: border.bottom || null,
+            right: border.right || null
         }
     };
 }
@@ -864,6 +871,24 @@ function BodyReader(options) {
         };
     }
 
+    function readParagraphBorders(element) {
+        return {
+            top: readParagraphBorder(element.firstOrEmpty("w:top")),
+            left: readParagraphBorder(element.firstOrEmpty("w:left")),
+            bottom: readParagraphBorder(element.firstOrEmpty("w:bottom")),
+            right: readParagraphBorder(element.firstOrEmpty("w:right"))
+        };
+    }
+
+    function readParagraphBorder(element) {
+        return {
+            style: element.attributes["w:val"],
+            width: element.attributes["w:sz"],
+            offset: element.attributes["w:space"],
+            color: element.attributes["w:color"]
+        };
+    }
+
     function readRunProperties(element) {
         return readRunStyle(element).map(function(style) {
             return {
@@ -1003,7 +1028,8 @@ function BodyReader(options) {
                     alignment: element.firstOrEmpty("w:jc").attributes["w:val"],
                     numbering: readNumberingProperties(element.firstOrEmpty("w:numPr"), numbering),
                     indent: readParagraphIndent(element.firstOrEmpty("w:ind")),
-                    spacing: readParagraphSpacing(element.firstOrEmpty("w:spacing"))
+                    spacing: readParagraphSpacing(element.firstOrEmpty("w:spacing")),
+                    border: readParagraphBorders(element.firstOrEmpty("w:pBdr"))
                 };
             });
         },
