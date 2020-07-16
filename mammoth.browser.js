@@ -643,6 +643,7 @@ function Run(children, properties) {
         isSmallCaps: properties.isSmallCaps,
         verticalAlignment: properties.verticalAlignment || verticalAlignment.baseline,
         font: properties.font || null,
+        size: properties.size || null,
         color: properties.color || null,
         highlight: properties.highlight || null
     };
@@ -897,6 +898,7 @@ function BodyReader(options) {
                 styleName: style.name,
                 verticalAlignment: element.firstOrEmpty("w:vertAlign").attributes["w:val"],
                 font: element.firstOrEmpty("w:rFonts").attributes["w:ascii"],
+                size: element.firstOrEmpty("w:sz").attributes["w:val"],
                 isBold: readBooleanElement(element.first("w:b")),
                 isUnderline: readBooleanElement(element.first("w:u")),
                 isItalic: readBooleanElement(element.first("w:i")),

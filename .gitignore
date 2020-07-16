@@ -2,3 +2,5 @@
 /_build
 /static/bootstrap
 /static/jszip
+
+.idea
